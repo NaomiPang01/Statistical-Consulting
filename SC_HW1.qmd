@@ -1,0 +1,108 @@
+---
+title: "Titanic Dataset Summary"
+format: html
+editor: visual
+---
+
+## Introduction
+
+This report summarizes the Titanic dataset, offering insights into passenger demographics and survival rates from the tragic sinking of the RMS Titanic in 1912.
+
+### Data Loading and Preparation
+
+```{r}
+library(ggplot2) ; library(dplyr)
+
+# Load the Titanic dataset
+dt <- read.csv("titanic.csv")
+
+# Convert relevant columns to factors
+dt[,c(2:5,7:9,11,12)] <- lapply(dt[,c(2:5,7:9,11,12)], as.factor)
+head(dt)
+```
+
+### Summary of the Data Set
+
+```{r}
+# Display structure and summary of the dataset
+str(dt)
+summary(dt)
+```
+
+### Handling Missing Values
+
+```{r}
+# Remove rows with NA values
+dt <- na.omit(dt)
+summary(dt)
+```
+
+### Survival Rates:
+
+```{r}
+# Calculate overall survival rates
+survival_rate <- dt %>% group_by(Survived) %>% summarize(Count = n())
+
+# Plot overall survival rates
+ggplot(survival_rate, aes(x = Survived, y = Count)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Survived", y = "Count", title = "Survival Rates on the Titanic")
+```
+
+### Survival Rate by Gender
+
+```{r}
+# Calculate survival rates by gender
+gender_survival <- dt %>% group_by(Sex, Survived) %>% summarize(Count = n()) %>%
+  mutate(Survival_Rate = Count / sum(Count))
+
+# Plot survival rates by gender
+ggplot(gender_survival, aes(x = Sex, y = Survival_Rate, fill = Survived)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Gender", y = "Survival Rate", fill = "Survived", title = "Survival Rate by Gender") +
+  scale_y_continuous(labels = scales::percent)
+```
+
+### Survival Rate by Passenger Class
+
+```{r}
+# Calculate survival rates by passenger class
+class_survival <- dt %>% group_by(Pclass, Survived) %>% summarize(Count = n()) %>%
+  mutate(Survival_Rate = Count / sum(Count))
+
+# Plot survival rates by passenger class
+ggplot(class_survival, aes(x = Pclass, y = Survival_Rate, fill = Survived)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Passenger Class", y = "Survival Rate", fill = "Survived", title = "Survival Rate by Passenger Class") +
+  scale_y_continuous(labels = scales::percent)
+```
+
+### Survival Rate by Age Groups
+
+```{r}
+# Create age groups
+dt <- dt %>%
+  mutate(Age_Group = case_when(
+    Age < 18 ~ "<18",
+    Age >= 18 & Age < 30 ~ "18-29",
+    Age >= 30 & Age < 40 ~ "30-39",
+    Age >= 40 & Age < 50 ~ "40-49",
+    Age >= 50 & Age < 60 ~ "50-59",
+    Age >= 60 ~ "60+",
+    TRUE ~ "Unknown"
+  ))
+
+# Calculate survival rates by age group
+age_survival <- dt %>% group_by(Age_Group, Survived) %>%
+  summarize(Count = n()) %>% mutate(Survival_Rate = Count / sum(Count))
+
+# Plot survival rates by age group
+ggplot(age_survival, aes(x = Age_Group, y = Survival_Rate, fill = Survived)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Age Group", y = "Survival Rate", fill = "Survived", title = "Survival Rate by Age Group") +
+  scale_y_continuous(labels = scales::percent)
+```
+
+## Conclusion
+
+This report analyzed the Titanic dataset, revealing significant insights into survival rates based on gender, passenger class, and age groups.
